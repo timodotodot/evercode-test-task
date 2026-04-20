@@ -1,0 +1,12 @@
+{
+  "name": "evercode-test-task",
+  "version": "1.0.0",
+  "description": "Test task",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "scheduler.js",
+  "scripts": {
+    "start": "node scheduler.js"
+  }
+}
