@@ -5,8 +5,14 @@
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "scheduler.js",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node scheduler.js"
+    "start": "node src/app.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2"
   }
 }
