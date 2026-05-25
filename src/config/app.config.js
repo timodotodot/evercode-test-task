@@ -1,3 +1,5 @@
+require('dotenv').config({ quiet: true });
+
 const config = {
     appName: 'evercode-test-task',
     logLevel: 'INFO',
@@ -7,6 +9,9 @@ const config = {
     scheduler: {
         runningInterval: 10000,
     },
+    auth: {
+        token: process.env.AUTH_TOKEN
+    }
 };
 
 module.exports = config;
