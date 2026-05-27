@@ -1,6 +1,7 @@
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const { createCurrencyRouter } = require('../currency/currency.router');
+const { createPriceRouter } = require('../price/price.router');
 const { authMiddleware } = require('../auth/auth.middleware');
 const { swaggerSpec } = require('../docs/swagger.config');
 
@@ -11,27 +12,12 @@ function createServerApp() {
 
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-    /**
-     * @openapi
-     * /status:
-     *   get:
-     *     summary: Проверка статуса сервера
-     *     tags:
-     *       - System
-     *     responses:
-     *       200:
-     *         description: Server is running
-     *         content:
-     *           text/plain:
-     *             schema:
-     *               type: string
-     *               example: ok
-     */
     app.get('/status', (req, res) => {
         res.send('ok');
     });
 
     app.use('/currencies', authMiddleware, createCurrencyRouter());
+    app.use('/price', authMiddleware, createPriceRouter());
 
     return app;
 }

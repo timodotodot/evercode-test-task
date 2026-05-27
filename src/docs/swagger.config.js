@@ -72,6 +72,7 @@ const swaggerSpec = swaggerJsdoc({
     apis: [
         './src/server/*.js',
         './src/currency/*.js',
+        './src/price/*.js',
     ],
 });
 
