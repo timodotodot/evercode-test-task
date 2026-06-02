@@ -2,7 +2,16 @@ const express = require('express');
 const currencyRepository = require('./currency.repository');
 
 function isInvalidCurrencyData(data) {
-    return !data.name || !data.ticker;
+    return (
+        typeof data.name !== 'string'
+        || data.name.trim().length === 0
+        || typeof data.ticker !== 'string'
+        || data.ticker.trim().length === 0
+    );
+}
+
+function isEmptyUpdate(data) {
+    return data.name === undefined && data.ticker === undefined;
 }
 
 function createCurrencyRouter() {
@@ -29,8 +38,8 @@ function createCurrencyRouter() {
      *       403:
      *         description: Forbidden
      */
-    router.get('/', (req, res) => {
-        const currencies = currencyRepository.findAll();
+    router.get('/', async (req, res) => {
+        const currencies = await currencyRepository.findAll();
 
         return res.json(currencies);
     });
@@ -63,8 +72,8 @@ function createCurrencyRouter() {
      *       404:
      *         description: Currency not found
      */
-    router.get('/:id', (req, res) => {
-        const currency = currencyRepository.findById(Number(req.params.id));
+    router.get('/:id', async (req, res) => {
+        const currency = await currencyRepository.findById(Number(req.params.id));
 
         if (!currency) {
             return res.sendStatus(404);
@@ -100,12 +109,12 @@ function createCurrencyRouter() {
      *       403:
      *         description: Forbidden
      */
-    router.post('/', (req, res) => {
+    router.post('/', async (req, res) => {
         if (isInvalidCurrencyData(req.body)) {
             return res.sendStatus(400);
         }
 
-        const currency = currencyRepository.create({
+        const currency = await currencyRepository.create({
             name: req.body.name.trim(),
             ticker: req.body.ticker.trim().toUpperCase(),
         });
@@ -149,8 +158,12 @@ function createCurrencyRouter() {
      *       404:
      *         description: Currency not found
      */
-    router.patch('/:id', (req, res) => {
-        const currency = currencyRepository.update(Number(req.params.id), {
+    router.patch('/:id', async (req, res) => {
+        if (isEmptyUpdate(req.body)) {
+            return res.sendStatus(400);
+        }
+        
+        const currency = await currencyRepository.update(Number(req.params.id), {
             name: req.body.name?.trim(),
             ticker: req.body.ticker?.trim().toUpperCase(),
         });
@@ -186,8 +199,8 @@ function createCurrencyRouter() {
      *       404:
      *         description: Currency not found
      */
-    router.delete('/:id', (req, res) => {
-        const deleted = currencyRepository.remove(Number(req.params.id));
+    router.delete('/:id', async (req, res) => {
+        const deleted = await currencyRepository.remove(Number(req.params.id));
 
         if (!deleted) {
             return res.sendStatus(404);
