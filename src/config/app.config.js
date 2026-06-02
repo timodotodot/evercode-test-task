@@ -11,6 +11,9 @@ const config = {
     },
     auth: {
         token: process.env.AUTH_TOKEN
+    },
+    database: {
+        filename: process.env.DB_FILENAME
     }
 };
 
