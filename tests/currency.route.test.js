@@ -1,15 +1,21 @@
 const request = require('supertest');
 const { createServerApp } = require('../src/server/server.app');
 const currencyRepository = require('../src/currency/currency.repository');
+const { initDatabase, closeDatabase } = require('../src/database/database');
 
 const authToken = process.env.AUTH_TOKEN;
 
 describe('currency routes', () => {
     let app;
 
-    beforeEach(() => {
-        currencyRepository.clear();
+    beforeEach(async () => {
+        await initDatabase();
+        await currencyRepository.clear();
         app = createServerApp();
+    });
+
+    afterAll(async () => {
+        await closeDatabase();
     });
 
     test('creates and returns currency', async () => {

@@ -56,7 +56,7 @@ function createPriceRouter() {
         }
 
         const ticker = currency.trim().toUpperCase();
-        const savedCurrency = currencyRepository.findByTicker(ticker);
+        const savedCurrency = await currencyRepository.findByTicker(ticker);
 
         if (!savedCurrency) {
             return res.status(404).json({

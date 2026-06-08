@@ -4,8 +4,9 @@ const { createServerApp } = require('./server/server.app');
 const SchedulerService = require('./scheduler/scheduler.service');
 const { createRunningLoggerTask } = require('./scheduler/tasks/runningLogger.task');
 const { createRequestId } = require('./utils/request-id.util');
+const { initDatabase } = require('./database/database');
 
-function startApp() {
+async function startApp() {
     const requestId = createRequestId();
     const logger = createLogger({
         appName: config.appName,
@@ -13,6 +14,7 @@ function startApp() {
     });
 
     try {
+        await initDatabase();
         logger.info('Application started', { requestId });
 
         const serverApp = createServerApp();

@@ -1,63 +1,95 @@
-const currencies = [];
-let nextId = 1;
+const { getDatabase, runInTransaction } = require('../database/database');
 
-function findAll() {
-    return currencies;
+async function findAll() {
+    const db = await getDatabase();
+
+    return db.all(`
+        SELECT id, name, ticker
+        FROM currencies
+        ORDER BY id ASC
+    `);
 }
 
-function findById(id) {
-    return currencies.find(c => c.id === id);
+async function findById(id) {
+    const db = await getDatabase();
+
+    return db.get(`
+        SELECT id, name, ticker
+        FROM currencies
+        WHERE id = ?
+    `, id);
 }
 
-function findByTicker(ticker) {
-    return currencies.find(c => c.ticker === ticker);
+async function findByTicker(ticker) {
+    const db = await getDatabase();
+
+    return db.get(`
+        SELECT id, name, ticker
+        FROM currencies
+        WHERE ticker = ?
+    `, ticker);
 }
 
-function create(data) {
-    const currency = {
-        id: nextId++,
-        name: data.name,
-        ticker: data.ticker,
-    }
+async function create(data) {
+    return runInTransaction(async (db) => {
+        const result = await db.run(`
+            INSERT INTO currencies (name, ticker)
+            VALUES (?, ?)
+        `, data.name, data.ticker);
 
-    currencies.push(currency);
-    
-    return currency;
+        return db.get(`
+            SELECT id, name, ticker
+            FROM currencies
+            WHERE id = ?
+        `, result.lastID);
+    });
 }
 
-function update(id, data) {
-    const currency = findById(id);
-    
-    if (!currency) {
-        return null;
-    }
+async function update(id, data) {
+    return runInTransaction(async (db) => {
+        const currency = await db.get(`
+            SELECT id, name, ticker
+            FROM currencies
+            WHERE id = ?
+        `, id);
 
-    if (data.name !== undefined) {
-        currency.name = data.name;
-    }
+        if (!currency) {
+            return null;
+        }
 
-    if (data.ticker !== undefined) {
-        currency.ticker = data.ticker;
-    }
+        const nextName = data.name !== undefined ? data.name : currency.name;
+        const nextTicker = data.ticker !== undefined ? data.ticker : currency.ticker;
 
-    return currency;
+        await db.run(`
+            UPDATE currencies
+            SET name = ?, ticker = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `, nextName, nextTicker, id);
+
+        return db.get(`
+            SELECT id, name, ticker
+            FROM currencies
+            WHERE id = ?
+        `, id);
+    });
 }
 
-function remove(id) {
-    const index = currencies.findIndex(c => c.id === id);
+async function remove(id) {
+    return runInTransaction(async (db) => {
+        const result = await db.run(`
+            DELETE FROM currencies
+            WHERE id = ?
+        `, id);
 
-    if (index === -1) {
-        return false;
-    }
-
-    currencies.splice(index, 1);
-    
-    return true;
+        return result.changes > 0;
+    });
 }
 
-function clear() {
-    currencies.length = 0;
-    nextId = 1;
+async function clear() {
+    const db = await getDatabase();
+
+    await db.exec('DELETE FROM currencies');
+    await db.exec("DELETE FROM sqlite_sequence WHERE name = 'currencies'");
 }
 
 module.exports = {
@@ -68,4 +100,4 @@ module.exports = {
     update,
     remove,
     clear,
-}
+};

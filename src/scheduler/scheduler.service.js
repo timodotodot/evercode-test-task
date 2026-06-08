@@ -33,20 +33,6 @@ class SchedulerService {
     }
 
     validateTask(name, interval, task, requestId) {
-        if (!name || typeof name !== 'string') {
-            throw new ValidationError('Task name must be a non-empty string', {
-                requestId,
-                context: { name },
-            });
-        }
-
-        if (!Number.isFinite(interval) || interval <= 0) {
-            throw new ValidationError('Task interval must be a positive number', {
-                requestId,
-                context: { interval },
-            });
-        }
-
         if (typeof task !== 'function') {
             throw new ValidationError('Task handler must be a function', {
                 requestId,
