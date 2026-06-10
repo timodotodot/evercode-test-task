@@ -3,14 +3,15 @@ const { SchedulerError, ValidationError } = require('../errors');
 class SchedulerService {
     constructor(logger) {
         this.logger = logger;
+        this.timers = new Map();
     }
 
     scheduleTask(name, interval, task, options = {}) {
         this.validateTask(name, interval, task, options.requestId);
 
-        const timerId = setInterval(() => {
+        const timerId = setInterval(async () => {
             try {
-                task();
+                await task();
             } catch (error) {
                 const schedulerError = new SchedulerError(`Task "${name}" failed`, {
                     requestId: options.requestId,
@@ -25,11 +26,23 @@ class SchedulerService {
             }
         }, interval);
 
+        this.timers.set(name, timerId);
+
         this.logger.info(`Task "${name}" started`, {
             requestId: options.requestId,
         });
 
         return timerId;
+    }
+
+    stopAll() {
+        for (const timerId of this.timers.values()) {
+            clearInterval(timerId);
+        }
+
+        this.timers.clear();
+
+        this.logger.info('All scheduled tasks stopped');
     }
 
     validateTask(name, interval, task, requestId) {
