@@ -37,6 +37,18 @@ async function initDatabase() {
             updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
     `);
+
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS price_rates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            currency_ticker TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            price TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(currency_ticker, symbol),
+            FOREIGN KEY (currency_ticker) REFERENCES currencies(ticker) ON DELETE CASCADE
+        );
+    `);
 }
 
 async function runInTransaction(callback) {
