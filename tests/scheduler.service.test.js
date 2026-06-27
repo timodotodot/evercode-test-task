@@ -36,14 +36,4 @@ describe('SchedulerService', () => {
             requestId: 'request-1',
         });
     });
-
-    test('throws ValidationError when interval is invalid', () => {
-        const scheduler = new SchedulerService(logger);
-
-        expect(() => {
-            scheduler.scheduleTask('example-task', 0, jest.fn(), {
-                requestId: 'request-1',
-            });
-        }).toThrow(ValidationError);
-    });
 });

@@ -1,6 +1,6 @@
 const express = require('express');
 const currencyRepository = require('../currency/currency.repository');
-const { fetchBinancePrices } = require('./binance.client');
+const priceRepository = require('./price.repository');
 
 function createPriceRouter() {
     const router = express.Router();
@@ -9,7 +9,7 @@ function createPriceRouter() {
      * @openapi
      * /price:
      *   get:
-     *     summary: Получить цены с Binance для заданного тикера валюты
+     *     summary: Получить сохраненные цены для заданного тикера валюты
      *     tags:
      *       - Price
      *     security:
@@ -43,8 +43,6 @@ function createPriceRouter() {
      *         description: Forbidden
      *       404:
      *         description: Currency not found
-     *       502:
-     *         description: Failed to fetch prices from Binance
      */
     router.get('/', async (req, res) => {
         const currency = req.query.currency;
@@ -64,16 +62,9 @@ function createPriceRouter() {
             });
         }
 
-        try {
-            const prices = await fetchBinancePrices();
-            const filteredPrices = prices.filter((item) => item.symbol.includes(ticker));
+        const prices = await priceRepository.findByCurrencyTicker(ticker);
 
-            return res.json(filteredPrices);
-        } catch (error) {
-            return res.status(502).json({
-                message: 'Failed to fetch prices from Binance',
-            });
-        }
+        return res.json(prices);
     });
 
     return router;

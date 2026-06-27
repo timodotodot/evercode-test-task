@@ -2,9 +2,7 @@ const request = require('supertest');
 const { createServerApp } = require('../src/server/server.app');
 const currencyRepository = require('../src/currency/currency.repository');
 const { initDatabase, closeDatabase } = require('../src/database/database');
-const binanceClient = require('../src/price/binance.client');
-
-jest.mock('../src/price/binance.client');
+const priceRepository = require('../src/price/price.repository');
 
 const authToken = process.env.AUTH_TOKEN;
 
@@ -13,41 +11,38 @@ describe('price route', () => {
 
     beforeEach(async () => {
         await initDatabase();
+        await priceRepository.clear();
         await currencyRepository.clear();
+        
         app = createServerApp();
-        jest.clearAllMocks();
     });
 
     afterAll(async () => {
         await closeDatabase();
     });
 
-    test('return prices for existing currency', async () => {
+    test('returns saved prices for existing currency', async () => {
         await currencyRepository.create({
             name: 'Bitcoin',
             ticker: 'BTC',
         });
 
-        binanceClient.fetchBinancePrices.mockResolvedValue([
+        await priceRepository.replacePricesForTicker('BTC', [
             {
                 symbol: 'BTCUSDT',
                 price: '65000.00000000',
+                updated_at: expect.any(String),
             },
             {
                 symbol: 'ETHBTC',
                 price: '0.05200000',
-            },
-            {
-                symbol: 'ETHUSDT',
-                price: '3400.00000000',
+                updated_at: expect.any(String),
             },
         ]);
 
         const response = await request(app)
             .get('/price')
-            .query({
-                currency: 'BTC',
-            })
+            .query({ currency: 'BTC' })
             .set('Authorization', `Bearer ${authToken}`);
 
         expect(response.status).toBe(200);
@@ -55,10 +50,12 @@ describe('price route', () => {
             {
                 symbol: 'BTCUSDT',
                 price: '65000.00000000',
+                updated_at: expect.any(String),
             },
             {
                 symbol: 'ETHBTC',
                 price: '0.05200000',
+                updated_at: expect.any(String),
             },
         ]);
     });
@@ -67,7 +64,16 @@ describe('price route', () => {
         const response = await request(app)
             .get('/price')
             .set('Authorization', `Bearer ${authToken}`);
-        
+
         expect(response.status).toBe(400);
     });
-})
+
+    test('returns 404 when currency is not found', async () => {
+        const response = await request(app)
+            .get('/price')
+            .query({ currency: 'BTC' })
+            .set('Authorization', `Bearer ${authToken}`);
+
+        expect(response.status).toBe(404);
+    });
+});

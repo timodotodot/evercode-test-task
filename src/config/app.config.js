@@ -10,6 +10,9 @@ const configSchema = z.object({
     scheduler: z.object({
         runningInterval: z.number().int().positive()
     }),
+    backgroundTask: z.object({
+        priceUpdateInterval: z.number().int().positive()
+    }),
     auth: z.object({
         token: z.string().min(1, 'AUTH_TOKEN is required')
     }),
@@ -26,6 +29,9 @@ const rawConfig = {
     },
     scheduler: { 
         runningInterval: 10000
+    },
+    backgroundTask: {
+        priceUpdateInterval: 60000
     },
     auth: { 
         token: process.env.AUTH_TOKEN
